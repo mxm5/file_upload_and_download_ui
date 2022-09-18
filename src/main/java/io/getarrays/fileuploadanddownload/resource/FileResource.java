@@ -34,13 +34,18 @@ import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 public class FileResource {
 
     // define a location
-    public static final String DIRECTORY = System.getProperty("user.home") + "/Downloads/uploads/";
+    public static final String DIRECTORY;
+
+    static {
+        String resources = "/src/main/resources/";
+        DIRECTORY = "." + resources;
+    }
 
     // Define a method to upload files
     @PostMapping("/upload")
-    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files")List<MultipartFile> multipartFiles) throws IOException {
+    public ResponseEntity<List<String>> uploadFiles(@RequestParam("files") List<MultipartFile> multipartFiles) throws IOException {
         List<String> filenames = new ArrayList<>();
-        for(MultipartFile file : multipartFiles) {
+        for (MultipartFile file : multipartFiles) {
             String filename = StringUtils.cleanPath(file.getOriginalFilename());
             Path fileStorage = get(DIRECTORY, filename).toAbsolutePath().normalize();
             copy(file.getInputStream(), fileStorage, REPLACE_EXISTING);
@@ -53,7 +58,7 @@ public class FileResource {
     @GetMapping("download/{filename}")
     public ResponseEntity<Resource> downloadFiles(@PathVariable("filename") String filename) throws IOException {
         Path filePath = get(DIRECTORY).toAbsolutePath().normalize().resolve(filename);
-        if(!Files.exists(filePath)) {
+        if (!Files.exists(filePath)) {
             throw new FileNotFoundException(filename + " was not found on the server");
         }
         Resource resource = new UrlResource(filePath.toUri());
